@@ -89,7 +89,7 @@ void Fit(TH1*,int);
 void Sort(int);
 void Print();
 
-Int_t BetterOffsetExtractor(){
+Int_t BestOffsetExtractor(){
   std::cout<<"What is the first run in the range?"<<std::endl;
   std::cin>>FirstRun;
   std::cout<<"What is the last run in the range?"<<std::endl;
