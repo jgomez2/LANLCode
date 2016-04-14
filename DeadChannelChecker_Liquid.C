@@ -18,7 +18,7 @@
     {
       sprintf(FileName,"jgomez2-dflt-tag-%i.root",i);
       ptr_file=fopen(FileName,"r");
-      if(ptr_file==NULL) return;
+      if(ptr_file==NULL) continue;
       
       TFile *f = new TFile(FileName);
       f->cd("histos/Bopper");
