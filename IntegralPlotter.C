@@ -1,12 +1,10 @@
 void findHisto(int);
-
-Int_t IntegralPlotter(){
-
 char histoname[128];
 char histname[128];
 char canvasname[128];
 TCanvas *myCanvas[22];
 
+Int_t IntegralPlotter(){
 TFile *f = TFile::Open("FinalSum.root","READ");
 
 for (int i = 0; i<23; i++)
