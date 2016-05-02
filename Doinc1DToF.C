@@ -1,4 +1,3 @@
-File Edit Options Buffers Tools C++ Help                                                                                      
 void findHisto(int);
 
 char histotitle[128];
