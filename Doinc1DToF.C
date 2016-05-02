@@ -11,7 +11,7 @@ TCanvas *myCanvas[10];
 
   TFile *f = TFile::Open("FinalSum.root","READ");
 
-Int_t IntegralPlotter(){
+Int_t Doinc1DToF(){
 
   for (int i = 1; i<11; i++)
     {
