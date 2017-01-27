@@ -1,17 +1,17 @@
 {
   
   /////////////DATA PARAMS/////////////
-  const double MinEinc = 1.0;
-  const double MaxEinc = 1.5;
+  const double MinEinc = 0.7;
+  const double MaxEinc = 5.0;
   		
   const double MinEout =0.01;
-  const double MaxEout = 10;
+  const double MaxEout = 2.5;
   
-  const int NbinsPerDecade= 20;//THIS IS FOR THE OUTPUT!!!  MUST BE AN INTERGER LESS THAN OR EQUAL TO 100
+  const int NbinsPerDecade= 100;//THIS IS FOR THE OUTPUT!!!
 
   const bool MakeAPFNS = true;
 
-  const bool PrintDataPoints = true;
+  const bool PrintDataPoints = false;
 
   const int ParametersInTheModel=20;
 
@@ -51,11 +51,34 @@
                         //3 = To use the Negative 2 sigma for the Ratio of Ratios  
                         //4 = To use the Negative 1 sigma for the Ratio of Ratios
 
+  // std::cout<<"What is the minimum incoming energy desired (in units of MeV)?"<<std::endl;
+  // std::cin>>MinEinc;
+  
+  // std::cout<<""<<std::endl;
 
+  // std::cout<<"What is the maximum incoming energy desired (in units of MeV)?"<<std::endl;
+  // std::cin>>MaxEinc;
+
+  // std::cout<<""<<std::endl;
+  
+  // std::cout<<"What is the minimum outgoing neutron energy desired (in units of MeV)?"<<std::endl;
+  // std::cin>>MinEout;
+  
+  // std::cout<<""<<std::endl;
+  
+  // std::cout<<"What is the maximum outgoing neutron energy desired (in units of MeV)?"<<std::endl;
+  // std::cin>>MaxEout;
+  
+  // std::cout<<""<<std::endl;
+  
+  // std::cout<<"What is the number of bins desired per energy decade (please enter an integer)?"<<std::endl;
+  // std::cin>>NbinsPerDecade;
+  
+  // std::cout<<""<<std::endl;
     
   //TFile * const f = TFile::Open("jgomez2-FinalReplay-u235-ligl2015.root","READ");
   TFile * const f = TFile::Open("jgomez2-u235-cleaned2x-complete-sum.root","READ");
-  TFile * const other = TFile::Open("secondtry.root","READ");
+  //TFile *f = TFile::Open("./data/jgomez2-21870-21871-21870.root","READ");
 
   f->cd("histos/DoubleCoinc");
   
@@ -73,8 +96,7 @@
   
   for (int l=1;l<=22;l++)
     {
-      //if (l==3 || l==5 || l==16) continue; //Skip ligl 3 cuz it sucks
-      if (l==3) continue;
+      if (l==3 || l==5 || l==16) continue; //Skip ligl 3 cuz it sucks
       for (int p=1;p<=10;p++)
   	{
   	  sprintf(hfname,"dc1_3_poly_2eth_t00_ppac%02i_ligl%02i",p,l);//FG
@@ -530,7 +552,6 @@
     {
       if (MCNP_RENORMRANGE==1)
 	{
-	  TFile *p2sigma = TFile::Open("maxsum.root","READ");
 	  //TFile *p2sigma = TFile::Open("JaimesTest.root","READ");
 	  TFile *p2sigma = TFile::Open("pos2sigbelow100keveinc1mev.root","READ");
 	  TFile *p1sigma = TFile::Open("pos1sigbelow100keveinc1mev.root","READ");
@@ -829,7 +850,7 @@
   hn1mcnp->Scale(1./hn1mcnp->Integral());
   
   
-  //hfa->Scale(1./hfa->Integral());
+  hfa->Scale(1./hfa->Integral());
 
 
 
@@ -963,18 +984,6 @@
 
   if (!MakeAPFNS) return;
     
-  //Add terry correction factors
-  // corr = new TGraphErrors("terrypoints.txt","%lg %lg");
-  // TSpline3 *scorr = new TSpline3("s1",corr);
-  // TH1D *hcorr = new TH1D("hcorr","hcorr",nBins,x);
-
-  //Add terry correction factors
-  keegan = new TGraphErrors("Unc_DoubleRatio_Rebin-1.txt","%lg %lg");
-  TSpline3 *skeegan = new TSpline3("s1",keegan);
-  TH1D *hkeegan = new TH1D("hkeegan","hkeegan",nBins,x);
-  
-
-
   //Read in the ENDF 7 Standard PFNS
   pfns = new TGraphErrors("PFNS_ENDFVIIpt1B_1MeV.txt","%lg %lg");
   TSpline3 *spfns = new TSpline3("s",pfns);//Fit it using a poly(3)
@@ -987,14 +996,10 @@
     
   //Get w2 and bin content arrays for pfns histo
   Double_t *pfnsValues = hpfns->GetArray();
-  //Double_t *corrValues = hcorr->GetArray();
-  Double_t *keeganValues = hkeegan->GetArray();
-
+  
   for (int biniter=1;biniter<=hpfns->GetNbinsX();biniter++)
     {
       pfnsValues[biniter]=spfns->Eval(hpfns->GetBinCenter(biniter));
-      //corrValues[biniter]=scorr->Eval(hcorr->GetBinCenter(biniter));
-      keeganValues[biniter]=skeegan->Eval(hkeegan->GetBinCenter(biniter));
     }
 
 
@@ -1007,27 +1012,21 @@
   f1->SetParameter(0,1);
   f1->SetParameter(1,1.424);//Corresponds to T=1.424
   
-  TH1D *maxwellhist=(TH1D*)hf1d->Clone();
-  maxwellhist->Reset();
-  maxwellhist->Clear();
-  maxwellhist->SetName("maxwellhist");
-  maxwellhist->SetTitle("maxwellhist");
-  maxwellhist->FillRandom("f1",1000000);
-  maxwellhist->Scale(1./maxwellhist->Integral());
 
   TH1 *hpfns2 = (TH1*)hpfns->Clone();
   hpfns2->SetLineColor(kRed);
   hpfns2->SetLineWidth(2);
   hpfns2->Multiply(f1,1);
-  //hpfns2->Scale(1./hpfns2->Integral());
-  
+  hpfns2->Scale(1./hpfns2->Integral());
+  //hpfns2->Scale(1./5);
+
   new TCanvas;//Now setting up the ratio of ratios method
   if (WhichMCNP==1)data->Divide(hp2mcnp);
-  else if (WhichMCNP==2)data->Divide(hp1mcnp);
+  //else if (WhichMCNP==2)data->Divide(hp1mcnp);
   else if (WhichMCNP==3)data->Divide(hn2mcnp);
   else if (WhichMCNP==4)data->Divide(hn1mcnp);
   data->GetYaxis()->SetTitleOffset(1.7);
-  //data->Multiply(hpfns);
+  data->Multiply(hpfns);
   data->Multiply(f1,1);
 
   double I=0.0;
@@ -1045,20 +1044,8 @@
 	}
       std::cout<<I/ess<<std::endl;
       
-      other->cd();
-      data->Divide(hcorr1);
       
-
-      double dataintegral = 0.;
-      double otherintegral = 0.;
-      for (int a=1;a<data->GetNbinsX();a++)
-	{
-	  dataintegral += data->GetBinContent(a)*data->GetBinWidth(a);
-	  otherintegral +=hpfns2->GetBinContent(a)*hpfns2->GetBinWidth(a);
-	}
-      
-      hpfns2->Scale(1./otherintegral);
-      data->Scale(1./dataintegral);
+      data->Scale(1./data->Integral());
 
 
   //Now propagating errors correctly
@@ -1097,7 +1084,6 @@
     }//end of loop over bins
 
   data->Draw();
-  //  data10->Draw("same");
   hpfns2->Draw("lsame");
 
   //TSpline3 *sdata = new TSpline3("s",data);
@@ -1243,14 +1229,14 @@
       myout<<"Bin Lower Edge"<<"\t"<<"Bin Upper Edge"<<"\t"<<"Bin Value"<<"\t"
 	   <<"BinStatisticalError"<<"\t"<<"Percentage"<<endl;
       
-      for (i=1;i<data->GetXaxis()->FindBin(MaxEout);i++)
+      for (i=1;i<=data->GetXaxis()->FindBin(MaxEout);i++)
 	{
 	  myout<<data->GetBinLowEdge(i)<<"\t"<<
 	    (data->GetBinLowEdge(i)+data->GetBinWidth(i))<<"\t"<<
-	    hfa->GetBinContent(i)<<"\t"<<data->GetBinError(i)<<"\t"<<
+	    data->GetBinContent(i)<<"\t"<<data->GetBinError(i)<<"\t"<<
 	    data->GetBinError(i)/data->GetBinContent(i)<<endl;
 	}
-      //this now gives her the lethargy information
+
 
 
       myout<<"\n"<<endl;
