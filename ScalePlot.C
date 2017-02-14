@@ -1,8 +1,8 @@
 {
 
   //TFile *f = TFile::Open("jgomez2-timeordered.root");
+  TFile *f = TFile::Open("/Volumes/MACLiglData/jgomez2-19150-19154-19150.root","READ");
   //TFile *f = TFile::Open("/Volumes/MACLiglData/jgomez2-19150-19154-19151.root","READ");
-  TFile *f = TFile::Open("/Volumes/MACLiglData/jgomez2-19156-19166-19163.root","READ");
   
   f->cd("histos/Scaler");
 
@@ -17,6 +17,7 @@
 
   for (int i=1;i<=ppac->GetNbinsX();i++)
     {
+      if (ligl->GetBinContent(i)<5.) continue;
       liglrate->Fill(ligl->GetBinContent(i));
       ppacrate->Fill(ppac->GetBinContent(i));
       t0rate->Fill(t0->GetBinContent(i));
@@ -25,6 +26,10 @@
   
   new TCanvas;
   liglrate->Draw();
+
+  new TCanvas;
+  ligl->Draw();
+
 
   new TCanvas;
   ppacrate->Draw();
