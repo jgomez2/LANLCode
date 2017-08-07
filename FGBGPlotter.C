@@ -124,9 +124,9 @@
   //////////Making evenly space log bins for new plots//////////
   /////////////////////////////////////////////////////////////
   const double nDecades = log10(MaxEout) - log10(MinEout);
-  const int nBins = NbinsPerDecade*nDecades+1;
+  const int nBins = NbinsPerDecade*nDecades;
   Double_t x[nBins+1];// = {0};  
-  for(int i=0;i<=nBins;i++)
+  for(int i=0;i<=nBins+1;i++)
     {
       double id = static_cast<double>(i);
       x[i] = pow(10.,log10(MinEout)+id/NbinsPerDecade);
