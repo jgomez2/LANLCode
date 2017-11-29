@@ -73,13 +73,9 @@ void AnalyzeRun(int ThisRun){
 
 
   ////Grab the histograms
-  // TH1 *h1 =(TH1*)gDirectory->FindObjectAny("td03_time_t00_ligl03");
-  // TH1 *h2 =(TH1*)gDirectory->FindObjectAny("td03_time_t00_ligl10");
-  // TH1 *h3 =(TH1*)gDirectory->FindObjectAny("td03_time_t00_ligl17");
-
-  TH1 *h1 =(TH1*)gDirectory->FindObjectAny("td0_03_time_t00_ligl03");
-  TH1 *h2 =(TH1*)gDirectory->FindObjectAny("td0_03_time_t00_ligl10");
-  TH1 *h3 =(TH1*)gDirectory->FindObjectAny("td0_03_time_t00_ligl17");
+  TH1 *h1 =(TH1*)gDirectory->FindObjectAny("td1_05_time_ppac05_ligl03");
+  TH1 *h2 =(TH1*)gDirectory->FindObjectAny("td1_05_time_ppac05_ligl10");
+  TH1 *h3 =(TH1*)gDirectory->FindObjectAny("td1_05_time_ppac05_ligl17");
  
   firstisfit=false;
   secondisfit=false;
@@ -95,6 +91,9 @@ void AnalyzeRun(int ThisRun){
 
 
 void Fit(TH1* MyHist, int BoardNumber){
+  double current_amplitude=0.;
+  double current_mean=0.;
+  int current_range=0.;
 
   for (int i=0;i<3;i++)
     {
@@ -106,34 +105,36 @@ void Fit(TH1* MyHist, int BoardNumber){
 	  Float_t mean = myfit->GetParameter(1);
 	  Float_t stdeviation = myfit->GetParameter(2);
 	  if (stdeviation>5) continue;
-	  if ( (mean>range_low[i]) && (mean<range_hi[i]) )
+	  if(myfit->GetParameter(0)<current_amplitude)continue;
+	  if(myfit->GetParameter(0)>current_amplitude) 
 	    {
-	      if (BoardNumber==1) 
-		{
-		  // std::cout<<"The standard deviation was: "<<stdeviation<<" and a mean value of: "<<mean<<std::endl;
-		  //std::cout<<"With a high end of teh range being:  "<<range_hi[i]<<" with a lower end of the range: "<<range_low[i]<<std::endl;
-		  firstboard.push_back(mean);
-		  firstisfit=true;
-	      //new TCanvas;
-	      //MyHist->Draw();
-		}
-	      else if (BoardNumber==2)
-		{
-		  secondboard.push_back(mean);
-		  secondisfit=true;
-		  // new TCanvas;
-	      //MyHist->Draw();
-		}
-	      else if (BoardNumber==3) 
-		{
-		  thirdboard.push_back(mean);
-		  thirdisfit=true;
-		  //new TCanvas;
-		  //MyHist->Draw();
-		}
-	    }//end of if it falls in range
+	      current_amplitude=myfit->GetParameter(0);
+	      current_mean=mean;
+	      current_range=i;
+	    }
 	}//end of if fit exists
     }//end of loop over ranges
+  
+  std::cout<<"A\t"<<current_amplitude<<"    mu\t"<<current_mean<<"     range\t"<<current_range<<std::endl;
+  
+  if ( (current_mean>range_low[current_range]) && (current_mean<range_hi[current_range]) )
+    {
+      if (BoardNumber==1)
+	{
+	  firstboard.push_back(current_mean);
+	  firstisfit=true;
+	}
+      else if (BoardNumber==2)
+	{
+	  secondboard.push_back(current_mean);
+	  secondisfit=true;
+	}
+      else if (BoardNumber==3)
+	{
+	  thirdboard.push_back(current_mean);
+	  thirdisfit=true;
+	}
+    }//End of "in the range" check
 }//End of fit function
 
 
@@ -152,9 +153,13 @@ void Sort(int RunNumber){
       Double_t Board2Result=0;
       Double_t Board3Result=0;
       
-         
+      //First Board Checks
       if ( (firstboard[firstboard.size()-1] > -2) && (firstboard[firstboard.size()-1] < 2) ) Board1Result=0;
+      if ( (firstboard[firstboard.size()-1] > -11) && (firstboard[firstboard.size()-1] < -5) ) Board1Result=-8;
+      if ( (firstboard[firstboard.size()-1] > 5) && (firstboard[firstboard.size()-1] < 11) ) Board1Result=8;
+     
 
+      //Second Board Checks
       if ( (secondboard[secondboard.size()-1] > -2) && (secondboard[secondboard.size()-1] < 1) ) Board2Result=0;
       if ( (secondboard[secondboard.size()-1] > -9) && (secondboard[secondboard.size()-1] < -6.8) ) 
 	{
@@ -162,17 +167,18 @@ void Sort(int RunNumber){
 	}
       if ( (secondboard[secondboard.size()-1] > 7) && (secondboard[secondboard.size()-1] < 10) ) Board2Result=8;
 
+
+      //ThirdBoard Checks
       if ( (thirdboard[thirdboard.size()-1] > -1) && (thirdboard[thirdboard.size()-1] < 0) ) Board3Result=0;
       if ( (thirdboard[thirdboard.size()-1] > -9) && (thirdboard[thirdboard.size()-1] < -6) ) Board3Result=-8;
       if ( (thirdboard[thirdboard.size()-1] > 7) && (thirdboard[thirdboard.size()-1] < 10) ) 
 	{
 	  Board3Result=8;
-	  std::cout<<"I made it here"<<std::endl;
 	}
 
 
 
-      if ( (Board2Result==-8) || (Board3Result==-8) )
+      if ( (Board1Result==-8) || (Board2Result==-8) || (Board3Result==-8) )
 	{
 	  Board1Result+=8;
 	  Board2Result+=8;
